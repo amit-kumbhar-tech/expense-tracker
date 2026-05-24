@@ -41,6 +41,27 @@ def init_db():
     conn.close()
 
 
+def get_user_by_email(email):
+    conn = get_db()
+    user = conn.execute(
+        'SELECT * FROM users WHERE email = ?', (email,)
+    ).fetchone()
+    conn.close()
+    return user
+
+
+def create_user(name, email, password_hash):
+    conn = get_db()
+    cursor = conn.execute(
+        'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
+        (name, email, password_hash)
+    )
+    conn.commit()
+    new_id = cursor.lastrowid
+    conn.close()
+    return new_id
+
+
 def seed_db():
     conn = get_db()
     count = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
