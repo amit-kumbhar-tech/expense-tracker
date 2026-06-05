@@ -47,7 +47,7 @@ def register():
 
     session["user_id"]   = user_id
     session["user_name"] = name
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/login", methods=["GET", "POST"])
