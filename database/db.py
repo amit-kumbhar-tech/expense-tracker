@@ -44,7 +44,7 @@ def init_db():
 def get_user_by_id(user_id):
     conn = get_db()
     user = conn.execute(
-        'SELECT * FROM users WHERE id = ?', (user_id,)
+        'SELECT id, name, email, created_at FROM users WHERE id = ?', (user_id,)
     ).fetchone()
     conn.close()
     return user
@@ -102,3 +102,50 @@ def seed_db():
     )
     conn.commit()
     conn.close()
+
+
+def get_expenses_for_user(user_id, from_date, to_date):
+    conn = get_db()
+    rows = conn.execute(
+        'SELECT * FROM expenses'
+        ' WHERE user_id = ? AND date BETWEEN ? AND ?'
+        ' ORDER BY date DESC',
+        (user_id, from_date, to_date)
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def get_expense_stats(user_id, from_date, to_date):
+    conn = get_db()
+    row = conn.execute(
+        'SELECT COALESCE(SUM(amount), 0) AS total_spent,'
+        '       COUNT(*) AS transaction_count'
+        ' FROM expenses'
+        ' WHERE user_id = ? AND date BETWEEN ? AND ?',
+        (user_id, from_date, to_date)
+    ).fetchone()
+    top = conn.execute(
+        'SELECT category FROM expenses'
+        ' WHERE user_id = ? AND date BETWEEN ? AND ?'
+        ' GROUP BY category ORDER BY SUM(amount) DESC LIMIT 1',
+        (user_id, from_date, to_date)
+    ).fetchone()
+    conn.close()
+    return {
+        'total_spent': row['total_spent'],
+        'transaction_count': row['transaction_count'],
+        'top_category': top['category'] if top else None,
+    }
+
+
+def get_category_breakdown(user_id, from_date, to_date):
+    conn = get_db()
+    rows = conn.execute(
+        'SELECT category, SUM(amount) AS total FROM expenses'
+        ' WHERE user_id = ? AND date BETWEEN ? AND ?'
+        ' GROUP BY category ORDER BY total DESC',
+        (user_id, from_date, to_date)
+    ).fetchall()
+    conn.close()
+    return [{"category": r["category"], "total": r["total"]} for r in rows]

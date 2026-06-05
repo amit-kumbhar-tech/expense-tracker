@@ -35,6 +35,26 @@
         </div>
     </div>
 
+    <!-- ── Filter Bar ───────────────────────────────────────────────── -->
+    <div class="filter-bar">
+        <div class="filter-presets">
+            <a href="{{ url_for('profile', filter='this_month') }}"
+               class="filter-btn{% if active_filter == 'this_month' %} active{% endif %}">This Month</a>
+            <a href="{{ url_for('profile', filter='last_3_months') }}"
+               class="filter-btn{% if active_filter == 'last_3_months' %} active{% endif %}">Last 3 Months</a>
+            <a href="{{ url_for('profile', filter='this_year') }}"
+               class="filter-btn{% if active_filter == 'this_year' %} active{% endif %}">This Year</a>
+            <a href="{{ url_for('profile', filter='all_time') }}"
+               class="filter-btn{% if active_filter == 'all_time' %} active{% endif %}">All Time</a>
+        </div>
+        <form class="filter-custom" method="get" action="{{ url_for('profile') }}">
+            <input type="date" name="from_date" class="filter-date" value="{{ from_date }}">
+            <span class="filter-sep">to</span>
+            <input type="date" name="to_date" class="filter-date" value="{{ to_date }}">
+            <button type="submit" class="btn-primary filter-apply">Apply</button>
+        </form>
+    </div>
+
     <!-- ── Transaction History ──────────────────────────────────────── -->
     <div class="profile-section">
         <h2 class="section-title">Recent Transactions</h2>
@@ -49,14 +69,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for txn in transactions %}
+                    {% for exp in expenses %}
                     <tr>
-                        <td class="txn-date">{{ txn.date }}</td>
-                        <td>{{ txn.description }}</td>
-                        <td><span class="badge">{{ txn.category }}</span></td>
-                        <td class="txn-amount text-right mono">{{ txn.amount }}</td>
+                        <td class="txn-date">{{ exp.date }}</td>
+                        <td>{{ exp.description or "—" }}</td>
+                        <td><span class="badge">{{ exp.category }}</span></td>
+                        <td class="txn-amount text-right mono">₹{{ "%.2f"|format(exp.amount) }}</td>
                     </tr>
                     {% endfor %}
+                    {% if not expenses %}
+                    <tr>
+                        <td colspan="4" class="txn-empty">No expenses found for this period.</td>
+                    </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
@@ -66,6 +91,7 @@
     <div class="profile-section">
         <h2 class="section-title">Spending by Category</h2>
         <div class="breakdown-card">
+            {% if categories %}
             <ul class="cat-list">
                 {% for cat in categories %}
                 <li class="cat-row">
@@ -77,6 +103,9 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% else %}
+            <p class="cat-empty">No spending data for this period.</p>
+            {% endif %}
         </div>
     </div>
 

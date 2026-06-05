@@ -1,12 +1,20 @@
+import os
 import sqlite3
+from datetime import date, timedelta
 
 from flask import Flask, render_template, request, session, redirect, url_for, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from database.db import get_db, init_db, seed_db, get_user_by_email, get_user_by_id, create_user
+from database.db import (
+    get_db, init_db, seed_db,
+    get_user_by_email, get_user_by_id, create_user,
+    get_expenses_for_user, get_expense_stats, get_category_breakdown,
+)
 
 app = Flask(__name__)
-app.secret_key = "dev-secret-change-me"
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+
+_VALID_FILTER_PRESETS = {"this_month", "last_3_months", "this_year", "all_time"}
 
 
 # ------------------------------------------------------------------ #
@@ -45,6 +53,7 @@ def register():
         return render_template("register.html",
                                error="An account with that email already exists.")
 
+    session.clear()
     session["user_id"]   = user_id
     session["user_name"] = name
     return redirect(url_for("profile"))
@@ -63,6 +72,7 @@ def login():
     if not user or not check_password_hash(user["password_hash"], password):
         return render_template("login.html", error=error)
 
+    session.clear()
     session["user_id"]   = user["id"]
     session["user_name"] = user["name"]
     return redirect(url_for("profile"))
@@ -93,42 +103,88 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
-    name = "Demo User"
-    parts = name.split()
+    user_id = session["user_id"]
+
+    active_filter = request.args.get("filter", "this_month")
+    if active_filter not in _VALID_FILTER_PRESETS:
+        active_filter = "this_month"
+
+    raw_from = request.args.get("from_date", "").strip()
+    raw_to   = request.args.get("to_date",   "").strip()
+    use_custom = False
+    if raw_from and raw_to:
+        try:
+            date.fromisoformat(raw_from)
+            date.fromisoformat(raw_to)
+            use_custom = True
+        except ValueError:
+            pass  # invalid format — fall through to preset
+
+    today = date.today()
+    if use_custom:
+        from_date, to_date = raw_from, raw_to
+    elif active_filter == "this_month":
+        from_date = today.replace(day=1).isoformat()
+        to_date   = today.isoformat()
+    elif active_filter == "last_3_months":
+        from_date = (today - timedelta(days=90)).isoformat()
+        to_date   = today.isoformat()
+    elif active_filter == "this_year":
+        from_date = today.replace(month=1, day=1).isoformat()
+        to_date   = today.isoformat()
+    else:  # all_time
+        from_date = "1900-01-01"
+        to_date   = today.isoformat()
+
+    db_user = get_user_by_id(user_id)
+    if not db_user:
+        return redirect(url_for("login"))
+
+    expenses        = get_expenses_for_user(user_id, from_date, to_date)
+    stats           = get_expense_stats(user_id, from_date, to_date)
+    raw_categories  = get_category_breakdown(user_id, from_date, to_date)
+
+    parts    = db_user["name"].split()
     initials = "".join(p[0].upper() for p in parts[:2])
+    try:
+        member_since = date.fromisoformat(db_user["created_at"][:10]).strftime("%B %Y")
+    except (ValueError, TypeError):
+        member_since = "—"
 
     user = {
-        "name": name,
-        "email": "demo@spendly.com",
-        "member_since": "January 2026",
-        "initials": initials,
+        "name":         db_user["name"],
+        "email":        db_user["email"],
+        "member_since": member_since,
+        "initials":     initials,
     }
-    stats = {
-        "total_spent": "₹346.25",
-        "transaction_count": 8,
-        "top_category": "Bills",
-    }
-    transactions = [
-        {"date": "May 22, 2026", "description": "Dinner",        "category": "Food",          "amount": "₹18.75"},
-        {"date": "May 18, 2026", "description": "Miscellaneous", "category": "Other",         "amount": "₹10.00"},
-        {"date": "May 15, 2026", "description": "Groceries",     "category": "Shopping",      "amount": "₹85.00"},
-        {"date": "May 12, 2026", "description": "Movie tickets", "category": "Entertainment", "amount": "₹25.00"},
-        {"date": "May 10, 2026", "description": "Pharmacy",      "category": "Health",        "amount": "₹30.00"},
-    ]
+
+    # Avoid division by zero; categories will be empty anyway when total is 0
+    total = stats["total_spent"] if stats["total_spent"] else 1
     categories = [
-        {"name": "Bills",         "amount": "₹120.00", "pct": 35},
-        {"name": "Shopping",      "amount": "₹85.00",  "pct": 25},
-        {"name": "Transport",     "amount": "₹45.00",  "pct": 13},
-        {"name": "Food",          "amount": "₹31.25",  "pct": 9},
-        {"name": "Health",        "amount": "₹30.00",  "pct": 9},
-        {"name": "Entertainment", "amount": "₹25.00",  "pct": 7},
-        {"name": "Other",         "amount": "₹10.00",  "pct": 3},
+        {
+            "name":   row["category"],
+            "amount": f"₹{row['total']:.2f}",
+            "pct":    round(row["total"] / total * 100),
+        }
+        for row in raw_categories
     ]
-    return render_template("profile.html",
-                           user=user,
-                           stats=stats,
-                           transactions=transactions,
-                           categories=categories)
+
+    display_stats = {
+        "total_spent":       f"₹{stats['total_spent']:.2f}",
+        "transaction_count": stats["transaction_count"],
+        "top_category":      stats["top_category"] or "—",
+    }
+
+    return render_template(
+        "profile.html",
+        user=user,
+        expenses=expenses,
+        stats=display_stats,
+        categories=categories,
+        active_filter=active_filter,
+        from_date=raw_from,
+        to_date=raw_to,
+    )
 
 
 @app.route("/expenses/add")
