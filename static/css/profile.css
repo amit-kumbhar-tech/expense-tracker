@@ -249,6 +249,102 @@
 .mono { font-variant-numeric: tabular-nums; }
 
 /* ------------------------------------------------------------------ */
+/* Filter bar                                                          */
+/* ------------------------------------------------------------------ */
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filter-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.filter-btn {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    background: var(--paper);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    text-decoration: none;
+}
+
+.filter-btn:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.filter-btn.active {
+    background: var(--accent);
+    color: var(--paper);
+    border-color: var(--accent);
+}
+
+.filter-custom {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-date {
+    width: 9rem;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+}
+
+.filter-sep {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+}
+
+.filter-apply {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Empty states                                                        */
+/* ------------------------------------------------------------------ */
+
+.txn-empty {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+}
+
+.cat-empty {
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+    padding: 1.5rem 0;
+    margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -257,4 +353,7 @@
     .profile-header { flex-direction: column; text-align: center; }
     .stats-row { grid-template-columns: 1fr; }
     .cat-row { grid-template-columns: 90px 1fr 70px; gap: 0.75rem; }
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-date { width: 100%; flex: 1; }
+    .filter-apply { width: 100%; }
 }
