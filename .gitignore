@@ -1,8 +1,24 @@
-venv/
-expense_tracker.db
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Logs
+*.log
+
+# Environment
 .env
-.DS_Store
+
+# Database copies / backups
+*copy*.db
+*backup*.db
+
+# Claude
 .claude/plans/
+
+# OS
+.DS_Store
+Thumbs.db
