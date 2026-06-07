@@ -111,10 +111,21 @@
     gap: 0.75rem;
 }
 
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .section-title {
     font-family: var(--font-display);
     font-size: 1.15rem;
     color: var(--ink);
+}
+
+.btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
 }
 
 /* ------------------------------------------------------------------ */
