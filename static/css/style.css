@@ -518,6 +518,12 @@ a { color: inherit; text-decoration: none; }
 
 .form-input::placeholder { color: var(--ink-faint); }
 
+.form-optional {
+    font-weight: 400;
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+}
+
 .btn-submit {
     width: 100%;
     padding: 0.7rem;
