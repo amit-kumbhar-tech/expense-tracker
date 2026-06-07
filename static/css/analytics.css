@@ -1,0 +1,200 @@
+/* ------------------------------------------------------------------ */
+/* Analytics Coming Soon page                                          */
+/* ------------------------------------------------------------------ */
+
+.analytics-page {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 5rem 2rem 6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 3.5rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero area                                                           */
+/* ------------------------------------------------------------------ */
+
+.analytics-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    max-width: 560px;
+}
+
+.analytics-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-lg);
+    background: var(--accent-light);
+    border: 1px solid rgba(26, 71, 42, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.analytics-icon-wrap svg {
+    width: 40px;
+    height: 40px;
+    color: var(--accent);
+}
+
+.analytics-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--accent-2-light);
+    color: var(--accent-2);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(193, 127, 36, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.analytics-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    flex-shrink: 0;
+}
+
+.analytics-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+}
+
+.analytics-subtitle {
+    font-size: 1.05rem;
+    color: var(--ink-muted);
+    line-height: 1.75;
+    max-width: 480px;
+}
+
+.analytics-actions {
+    display: flex;
+    gap: 0.875rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Feature preview cards                                               */
+/* ------------------------------------------------------------------ */
+
+.analytics-features {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.analytics-feature-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.analytics-feature-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px rgba(26, 71, 42, 0.08);
+}
+
+.analytics-feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.analytics-feature-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--ink);
+    line-height: 1.3;
+}
+
+.analytics-feature-body {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    line-height: 1.65;
+}
+
+/* ------------------------------------------------------------------ */
+/* Progress indicator                                                  */
+/* ------------------------------------------------------------------ */
+
+.analytics-progress {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.analytics-progress-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.analytics-progress-track {
+    width: 100%;
+    height: 6px;
+    background: var(--border-soft);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.analytics-progress-bar {
+    height: 100%;
+    width: 35%;
+    background: linear-gradient(90deg, var(--accent), #2d7a48);
+    border-radius: 999px;
+}
+
+.analytics-progress-pct {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 640px) {
+    .analytics-page { padding: 3rem 1rem 4rem; }
+    .analytics-features { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+    .analytics-features { grid-template-columns: repeat(2, 1fr); }
+}

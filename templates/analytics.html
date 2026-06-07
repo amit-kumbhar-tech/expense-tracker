@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+
+    <!-- Hero -->
+    <div class="analytics-hero">
+
+        <div class="analytics-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6"  y1="20" x2="6"  y2="14"/>
+                <line x1="2"  y1="20" x2="22" y2="20"/>
+            </svg>
+        </div>
+
+        <span class="analytics-badge">
+            <span class="analytics-badge-dot"></span>
+            Coming Soon
+        </span>
+
+        <h1 class="analytics-title">Spending Analytics</h1>
+
+        <p class="analytics-subtitle">
+            Deep insights into your spending habits are on the way.
+            Charts, trends, and breakdowns that help you understand
+            where every rupee goes — and how to spend smarter.
+        </p>
+
+        <div class="analytics-actions">
+            <a href="{{ url_for('profile') }}" class="btn-primary">Back to Dashboard</a>
+            <a href="{{ url_for('landing') }}" class="btn-ghost">Learn more</a>
+        </div>
+
+    </div>
+
+    <!-- Progress -->
+    <div class="analytics-progress">
+        <span class="analytics-progress-label">In Development</span>
+        <div class="analytics-progress-track">
+            <div class="analytics-progress-bar"></div>
+        </div>
+        <span class="analytics-progress-pct">35% complete</span>
+    </div>
+
+    <!-- Feature preview cards -->
+    <div class="analytics-features">
+
+        <div class="analytics-feature-card">
+            <div class="analytics-feature-icon">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <polyline points="3 17 8 12 12 14 17 7"/>
+                    <line x1="3" y1="17" x2="17" y2="17"/>
+                </svg>
+            </div>
+            <div class="analytics-feature-title">Trends &amp; Patterns</div>
+            <p class="analytics-feature-body">
+                Visualise your spending over time. Spot seasonal spikes,
+                track monthly momentum, and see how your habits evolve.
+            </p>
+        </div>
+
+        <div class="analytics-feature-card">
+            <div class="analytics-feature-icon">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <circle cx="10" cy="10" r="7"/>
+                    <polyline points="10 3 10 10 14 10"/>
+                </svg>
+            </div>
+            <div class="analytics-feature-title">Category Insights</div>
+            <p class="analytics-feature-body">
+                Pie charts and breakdowns by category. Know exactly how
+                much you spend on food, transport, bills, and more.
+            </p>
+        </div>
+
+        <div class="analytics-feature-card">
+            <div class="analytics-feature-icon">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <rect x="3" y="4" width="14" height="13" rx="2"/>
+                    <line x1="3" y1="8" x2="17" y2="8"/>
+                    <line x1="8" y1="4" x2="8" y2="2"/>
+                    <line x1="12" y1="4" x2="12" y2="2"/>
+                </svg>
+            </div>
+            <div class="analytics-feature-title">Monthly Reports</div>
+            <p class="analytics-feature-body">
+                Automated monthly summaries delivered to your dashboard.
+                Compare against previous months and set spending goals.
+            </p>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
