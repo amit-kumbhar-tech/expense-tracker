@@ -1,0 +1,10 @@
+.add-expense-select {
+    cursor: pointer;
+    background-color: var(--paper-card);
+}
+
+.form-optional {
+    font-weight: 400;
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+}

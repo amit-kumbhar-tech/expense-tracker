@@ -9,12 +9,14 @@ from database.db import (
     get_db, init_db, seed_db,
     get_user_by_email, get_user_by_id, create_user,
     get_expenses_for_user, get_expense_stats, get_category_breakdown,
+    create_expense,
 )
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 _VALID_FILTER_PRESETS = {"this_month", "last_3_months", "this_year", "all_time"}
+_VALID_CATEGORIES = {"Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"}
 
 
 # ------------------------------------------------------------------ #
@@ -194,9 +196,60 @@ def analytics():
     return render_template("analytics.html")
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template(
+            "add_expense.html",
+            today=date.today().isoformat(),
+            categories=sorted(_VALID_CATEGORIES),
+        )
+
+    amount_raw   = request.form.get("amount", "").strip()
+    category     = request.form.get("category", "").strip()
+    expense_date = request.form.get("date", "").strip()
+    description  = request.form.get("description", "").strip()
+
+    def _error(msg):
+        return render_template(
+            "add_expense.html",
+            error=msg,
+            amount=amount_raw,
+            category=category,
+            date=expense_date,
+            description=description,
+            today=date.today().isoformat(),
+            categories=sorted(_VALID_CATEGORIES),
+        )
+
+    try:
+        amount = float(amount_raw)
+        if amount <= 0 or amount > 1_000_000:
+            raise ValueError
+    except (ValueError, TypeError):
+        return _error("Amount must be between ₹0.01 and ₹10,00,000.")
+
+    if category not in _VALID_CATEGORIES:
+        return _error("Please select a valid category.")
+
+    if description and len(description) > 200:
+        return _error("Description must be 200 characters or fewer.")
+
+    if not expense_date:
+        expense_date = date.today().isoformat()
+    else:
+        try:
+            parsed_date = date.fromisoformat(expense_date)
+        except ValueError:
+            return _error("Please enter a valid date.")
+        if parsed_date > date.today():
+            return _error("Expense date cannot be in the future.")
+
+    create_expense(session["user_id"], amount, category, expense_date, description)
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/edit")
