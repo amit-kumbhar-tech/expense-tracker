@@ -6,22 +6,71 @@ from flask import Flask, render_template, request, session, redirect, url_for, a
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from database.db import (
-    get_db, init_db, seed_db,
-    get_user_by_email, get_user_by_id, create_user,
-    get_expenses_for_user, get_expense_stats, get_category_breakdown,
+    get_db,
+    init_db,
+    seed_db,
+    get_user_by_email,
+    get_user_by_id,
+    create_user,
+    get_expenses_for_user,
+    get_expense_stats,
+    get_category_breakdown,
     create_expense,
+    get_expense_by_id,
+    update_expense,
 )
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 _VALID_FILTER_PRESETS = {"this_month", "last_3_months", "this_year", "all_time"}
-_VALID_CATEGORIES = {"Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"}
+_VALID_CATEGORIES = {
+    "Food",
+    "Transport",
+    "Bills",
+    "Health",
+    "Entertainment",
+    "Shopping",
+    "Other",
+}
+
+
+def _validate_expense_form(amount_raw, category, expense_date, description):
+    try:
+        amount = float(amount_raw)
+        if amount <= 0 or amount > 1_000_000:
+            raise ValueError
+    except (ValueError, TypeError):
+        return None, "Amount must be between ₹0.01 and ₹10,00,000."
+
+    if category not in _VALID_CATEGORIES:
+        return None, "Please select a valid category."
+
+    if description and len(description) > 200:
+        return None, "Description must be 200 characters or fewer."
+
+    if not expense_date:
+        expense_date = date.today().isoformat()
+    else:
+        try:
+            parsed_date = date.fromisoformat(expense_date)
+        except ValueError:
+            return None, "Please enter a valid date."
+        if parsed_date > date.today():
+            return None, "Expense date cannot be in the future."
+
+    return {
+        "amount": amount,
+        "category": category,
+        "date": expense_date,
+        "description": description,
+    }, None
 
 
 # ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
+
 
 @app.route("/")
 def landing():
@@ -33,30 +82,33 @@ def register():
     if request.method == "GET":
         return render_template("register.html")
 
-    name     = request.form.get("name", "").strip()
-    email    = request.form.get("email", "").strip().lower()
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
     password = request.form.get("password", "")
 
     if not name:
         return render_template("register.html", error="Name is required.")
 
     if len(password) < 8:
-        return render_template("register.html",
-                               error="Password must be at least 8 characters.")
+        return render_template(
+            "register.html", error="Password must be at least 8 characters."
+        )
 
     if get_user_by_email(email):
-        return render_template("register.html",
-                               error="An account with that email already exists.")
+        return render_template(
+            "register.html", error="An account with that email already exists."
+        )
 
     pw_hash = generate_password_hash(password)
     try:
         user_id = create_user(name, email, pw_hash)
     except sqlite3.IntegrityError:
-        return render_template("register.html",
-                               error="An account with that email already exists.")
+        return render_template(
+            "register.html", error="An account with that email already exists."
+        )
 
     session.clear()
-    session["user_id"]   = user_id
+    session["user_id"] = user_id
     session["user_name"] = name
     return redirect(url_for("profile"))
 
@@ -66,16 +118,16 @@ def login():
     if request.method == "GET":
         return render_template("login.html")
 
-    email    = request.form.get("email", "").strip().lower()
+    email = request.form.get("email", "").strip().lower()
     password = request.form.get("password", "")
-    error    = "Invalid email or password."
+    error = "Invalid email or password."
 
     user = get_user_by_email(email)
     if not user or not check_password_hash(user["password_hash"], password):
         return render_template("login.html", error=error)
 
     session.clear()
-    session["user_id"]   = user["id"]
+    session["user_id"] = user["id"]
     session["user_name"] = user["name"]
     return redirect(url_for("profile"))
 
@@ -83,6 +135,7 @@ def login():
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
+
 
 @app.route("/terms")
 def terms():
@@ -112,7 +165,7 @@ def profile():
         active_filter = "this_month"
 
     raw_from = request.args.get("from_date", "").strip()
-    raw_to   = request.args.get("to_date",   "").strip()
+    raw_to = request.args.get("to_date", "").strip()
     use_custom = False
     if raw_from and raw_to:
         try:
@@ -127,26 +180,26 @@ def profile():
         from_date, to_date = raw_from, raw_to
     elif active_filter == "this_month":
         from_date = today.replace(day=1).isoformat()
-        to_date   = today.isoformat()
+        to_date = today.isoformat()
     elif active_filter == "last_3_months":
         from_date = (today - timedelta(days=90)).isoformat()
-        to_date   = today.isoformat()
+        to_date = today.isoformat()
     elif active_filter == "this_year":
         from_date = today.replace(month=1, day=1).isoformat()
-        to_date   = today.isoformat()
+        to_date = today.isoformat()
     else:  # all_time
         from_date = "1900-01-01"
-        to_date   = today.isoformat()
+        to_date = today.isoformat()
 
     db_user = get_user_by_id(user_id)
     if not db_user:
         return redirect(url_for("login"))
 
-    expenses        = get_expenses_for_user(user_id, from_date, to_date)
-    stats           = get_expense_stats(user_id, from_date, to_date)
-    raw_categories  = get_category_breakdown(user_id, from_date, to_date)
+    expenses = get_expenses_for_user(user_id, from_date, to_date)
+    stats = get_expense_stats(user_id, from_date, to_date)
+    raw_categories = get_category_breakdown(user_id, from_date, to_date)
 
-    parts    = db_user["name"].split()
+    parts = db_user["name"].split()
     initials = "".join(p[0].upper() for p in parts[:2])
     try:
         member_since = date.fromisoformat(db_user["created_at"][:10]).strftime("%B %Y")
@@ -154,27 +207,27 @@ def profile():
         member_since = "—"
 
     user = {
-        "name":         db_user["name"],
-        "email":        db_user["email"],
+        "name": db_user["name"],
+        "email": db_user["email"],
         "member_since": member_since,
-        "initials":     initials,
+        "initials": initials,
     }
 
     # Avoid division by zero; categories will be empty anyway when total is 0
     total = stats["total_spent"] if stats["total_spent"] else 1
     categories = [
         {
-            "name":   row["category"],
+            "name": row["category"],
             "amount": f"₹{row['total']:.2f}",
-            "pct":    round(row["total"] / total * 100),
+            "pct": round(row["total"] / total * 100),
         }
         for row in raw_categories
     ]
 
     display_stats = {
-        "total_spent":       f"₹{stats['total_spent']:.2f}",
+        "total_spent": f"₹{stats['total_spent']:.2f}",
         "transaction_count": stats["transaction_count"],
-        "top_category":      stats["top_category"] or "—",
+        "top_category": stats["top_category"] or "—",
     }
 
     return render_template(
@@ -208,10 +261,10 @@ def add_expense():
             categories=sorted(_VALID_CATEGORIES),
         )
 
-    amount_raw   = request.form.get("amount", "").strip()
-    category     = request.form.get("category", "").strip()
+    amount_raw = request.form.get("amount", "").strip()
+    category = request.form.get("category", "").strip()
     expense_date = request.form.get("date", "").strip()
-    description  = request.form.get("description", "").strip()
+    description = request.form.get("description", "").strip()
 
     def _error(msg):
         return render_template(
@@ -225,36 +278,76 @@ def add_expense():
             categories=sorted(_VALID_CATEGORIES),
         )
 
-    try:
-        amount = float(amount_raw)
-        if amount <= 0 or amount > 1_000_000:
-            raise ValueError
-    except (ValueError, TypeError):
-        return _error("Amount must be between ₹0.01 and ₹10,00,000.")
+    fields, err = _validate_expense_form(
+        amount_raw, category, expense_date, description
+    )
+    if err:
+        return _error(err)
 
-    if category not in _VALID_CATEGORIES:
-        return _error("Please select a valid category.")
-
-    if description and len(description) > 200:
-        return _error("Description must be 200 characters or fewer.")
-
-    if not expense_date:
-        expense_date = date.today().isoformat()
-    else:
-        try:
-            parsed_date = date.fromisoformat(expense_date)
-        except ValueError:
-            return _error("Please enter a valid date.")
-        if parsed_date > date.today():
-            return _error("Expense date cannot be in the future.")
-
-    create_expense(session["user_id"], amount, category, expense_date, description)
+    create_expense(
+        session["user_id"],
+        fields["amount"],
+        fields["category"],
+        fields["date"],
+        fields["description"],
+    )
     return redirect(url_for("profile"))
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id)
+    if expense is None:
+        abort(404)
+    if expense["user_id"] != session["user_id"]:
+        abort(403)
+
+    if request.method == "GET":
+        return render_template(
+            "edit_expense.html",
+            expense=expense,
+            amount=f"{expense['amount']:.2f}",
+            category=expense["category"],
+            date=expense["date"],
+            description=expense["description"] or "",
+            categories=sorted(_VALID_CATEGORIES),
+        )
+
+    amount_raw = request.form.get("amount", "").strip()
+    category = request.form.get("category", "").strip()
+    expense_date = request.form.get("date", "").strip()
+    description = request.form.get("description", "").strip()
+
+    def _error(msg):
+        return render_template(
+            "edit_expense.html",
+            error=msg,
+            expense=expense,
+            amount=amount_raw,
+            category=category,
+            date=expense_date,
+            description=description,
+            categories=sorted(_VALID_CATEGORIES),
+        )
+
+    fields, err = _validate_expense_form(
+        amount_raw, category, expense_date, description
+    )
+    if err:
+        return _error(err)
+
+    update_expense(
+        id,
+        session["user_id"],
+        fields["amount"],
+        fields["category"],
+        fields["date"],
+        fields["description"],
+    )
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/delete")
@@ -268,4 +361,4 @@ with app.app_context():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=os.environ.get("FLASK_DEBUG", "0") == "1", port=5001)
