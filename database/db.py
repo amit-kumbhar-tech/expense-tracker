@@ -139,6 +139,19 @@ def get_expense_stats(user_id, from_date, to_date):
     }
 
 
+def create_expense(user_id, amount, category, expense_date, description):
+    conn = get_db()
+    cursor = conn.execute(
+        'INSERT INTO expenses (user_id, amount, category, date, description)'
+        ' VALUES (?, ?, ?, ?, ?)',
+        (user_id, amount, category, expense_date, description or None)
+    )
+    conn.commit()
+    new_id = cursor.lastrowid
+    conn.close()
+    return new_id
+
+
 def get_category_breakdown(user_id, from_date, to_date):
     conn = get_db()
     rows = conn.execute(

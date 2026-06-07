@@ -21,6 +21,7 @@
             <div class="nav-links">
                 {% if session.get('user_id') %}
                 <a href="{{ url_for('analytics') }}" class="{% if request.endpoint == 'analytics' %}nav-active{% endif %}">Analytics</a>
+                <a href="{{ url_for('add_expense') }}" class="nav-add-btn{% if request.endpoint == 'add_expense' %} nav-active{% endif %}">+ Add Expense</a>
                 <span style="color: var(--ink-muted)">{{ session.get('user_name') }}</span>
                 <a href="{{ url_for('logout') }}" class="nav-cta">Sign out</a>
                 {% else %}
@@ -40,8 +41,8 @@
             <span class="brand-icon">◈</span>
             <span class="footer-name">Spendly</span>
             <p class="footer-copy">Track every rupee. Own your finances.</p>
-            <a href="/terms">Terms and Conditions</a>
-            <a href="/privacy">Privacy Policy</a>
+            <a href="{{ url_for('terms') }}">Terms and Conditions</a>
+            <a href="{{ url_for('privacy') }}">Privacy Policy</a>
         </div>
     </footer>
 
